@@ -14,21 +14,14 @@ exports.handler = function(event, context, callback) {
 	const s3Bucket = process.env.AWS_S3_BUCKET;
 	const arn = process.env.AWS_TOPIC_ARN;
 	const sns = new AWS.SNS();
-	const payload = event.body;
-
-	// RELEASE
-	let release = '';
-	if (payload.release) release = slugify(payload.release);
-
-	// PAGES
-	let pages = parseData(payload.pages);
-
-	pageManager();
+	const payload = JSON.parse(event.body);
+	console.log(payload);
 
 	const parseData = (pageData) => {
-		let pageArray = [];
+	    console.log(pageData);
+		const pageArray = [];
 		for (var page of pageData) {
-			let pageUrl = page.url;
+			const pageUrl = page.url;
 			for (var resolution of page.resolutions) {
 				pageArray.push({
 					"pageUrl": pageUrl,
@@ -56,6 +49,7 @@ exports.handler = function(event, context, callback) {
 		}, function(err, data) {
 			if (err) {
 				console.error('error publishing to SNS');
+				console.error(err);
 				createError(err);
 			} else {
 				console.info('message published to SNS');
@@ -80,4 +74,13 @@ exports.handler = function(event, context, callback) {
 			.replace(/\-\-+/g, '-') // Replace multiple - with single -
 			.replace(/^-+/, ''); // Trim - from start of text
 	}
+
+	// RELEASE
+	let release = '';
+	if (payload.release) release = slugify(payload.release);
+
+	// PAGES
+	let pages = parseData(payload.pages);
+
+	pageManager();
 };
